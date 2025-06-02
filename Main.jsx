@@ -13,6 +13,10 @@ export default function Main() {
   ]);
   const [recipe, setRecipe] = React.useState("");
 
+  React.useEffect(() => {
+    setRecipe(""); // Clear recipe when ingredients change
+  }, [ingredients]);
+
   async function getRecipe() {
     const recipeMarkdown = await getRecipeFromMistral(ingredients);
     setRecipe(recipeMarkdown);
@@ -23,9 +27,23 @@ export default function Main() {
     setIngredients((prevIngredients) => [...prevIngredients, newIngredient]);
   }
 
+  function removeIngredient(ingredientToRemove) {
+    setIngredients((prevIngredients) =>
+      prevIngredients.filter((ingredient) => ingredient !== ingredientToRemove)
+    );
+  }
+
   return (
     <main>
-      <form action={addIngredient} className="add-ingredient-form">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          addIngredient(formData);
+          e.target.reset();
+        }}
+        className="add-ingredient-form"
+      >
         <input
           type="text"
           placeholder="e.g. oregano"
@@ -35,9 +53,11 @@ export default function Main() {
         <button>Add ingredient</button>
       </form>
 
-      {ingredients.length > 0 && (
-        <IngredientsList ingredients={ingredients} getRecipe={getRecipe} />
-      )}
+      <IngredientsList
+        ingredients={ingredients}
+        getRecipe={getRecipe}
+        onRemove={removeIngredient}
+      />
 
       {recipe && <ClaudeRecipe recipe={recipe} />}
     </main>
